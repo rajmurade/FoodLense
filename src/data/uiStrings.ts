@@ -53,6 +53,7 @@ export const uiStrings = {
     onlyInRecordCount: 'Only in record',
     source: 'Source',
     retrieved: 'Retrieved',
+    editedBadge: 'Edited by you',
     editedNote: 'You edited this text, so it is treated as your confirmed input.',
     limitsBody: 'It does not prove authenticity, safety, or absence of adulteration.',
     simulatedNote: 'This text is a simulated test, not read from a real pack.',
@@ -100,6 +101,8 @@ export const uiStrings = {
     needText: 'Read or type some ingredient text before comparing.',
     lowConfidenceWarning:
       'The reading confidence is low. Check the words carefully or retake the photo.',
+    simulatedToggle: 'Simulated test',
+    simulatedToggleHint: 'Marks the observed text as simulated test data, not read from a real pack.',
     errors: {
       empty: 'That file looks empty. Please choose a photo.',
       tooLarge: 'That image is larger than 5 MB. Please choose a smaller photo.',

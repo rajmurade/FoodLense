@@ -193,6 +193,11 @@ export default function Result() {
               {SIMULATED_TEST_LABEL}
             </span>
           ) : null}
+          {edited ? (
+            <span className="rounded-full bg-black/5 px-2 py-1 text-xs font-semibold text-brand-dark/80">
+              {uiStrings.result.editedBadge}
+            </span>
+          ) : null}
         </div>
         {routeState.simulated ? (
           <p className="text-xs text-purple-900">{uiStrings.result.simulatedNote}</p>

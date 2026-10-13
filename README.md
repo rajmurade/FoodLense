@@ -29,7 +29,10 @@ capture/upload with in-browser OCR and an editable review step, and the Result p
   spelling variants); `src/lib/imageValidation.ts` (JPEG/PNG/WebP magic-byte check, 5 MB limit),
   `src/lib/ocr.ts` (canvas resize to 1600 px long side + `tesseract.js` worker) and the Label
   page + `ImagePicker`, `OcrProgress`, `ConfidenceLabel`, `TextReview` components.
-- Not implemented: camera barcode scan, Guide/About content, deploy config.
+- Not implemented: camera barcode scan, Guide/About content.
+- Deployment: Cloudflare Pages configuration is prepared and documented below (build settings,
+  environment variables, local `wrangler pages dev`); the deployed HTTPS smoke test is still
+  to be done on a real phone.
 - Simulated: nothing. Tests use a mocked upstream and clearly labelled placeholder data
   ("Sample Product, simulated test"); no real network is called in tests. Deliberately
   altered label text must be shown with the "Simulated test" label (`src/data/simulated.ts`).
@@ -75,6 +78,9 @@ npm run preview    # serve the production build
   and English language data are self-hosted under `public/ocr/` (see OCR assets below).
 - `typescript` — strict typing across the app.
 - `vitest` — unit tests for pure logic and the banned-words check.
+- `wrangler` (dev) — Cloudflare's CLI. Used only for local/preview testing of the Pages
+  Function in `functions/` and the `_headers` file, because `vite dev` does not run
+  serverless functions. It is a dev dependency and is not shipped to the browser.
 - `@types/react`, `@types/react-dom`, `@types/node` — type definitions for the above.
 
 No database, accounts, LLM, cloud OCR or paid API is used.
@@ -96,8 +102,64 @@ and re-download `eng.traineddata.gz`. `public/_headers` allows the worker, the W
 
 ## Environment variables
 
-Copy names from `.env.example` into `.env` when the server function from a later step
-needs them. Secrets are never bundled into the frontend.
+The server function reads its variables from the Pages environment. For local Wrangler runs,
+copy `.dev.vars.example` to `.dev.vars`; for the deployed project, set them in the Pages
+dashboard. `.env.example` lists the same names. Secrets are never bundled into the frontend.
+
+## Deploy to Cloudflare Pages
+
+The app is a static SPA (`dist/`) plus one Pages Function that proxies Open Food Facts so the
+custom User-Agent and cache stay server-side.
+
+**Pages project build settings**
+
+| Setting | Value |
+|---|---|
+| Production branch | `main` |
+| Framework preset | None (Vite works too) |
+| Root directory | `/` (repository root) |
+| Build command | `npm run build` |
+| Build output directory | `dist` |
+| Node version | set `NODE_VERSION` (e.g. `20`) or add `.nvmrc`; developed on Node 24 |
+
+**Environment variables** (Pages → Settings → Environment variables; set for Production and
+Preview)
+
+| Name | Required | Purpose |
+|---|---|---|
+| `OFF_USER_AGENT` | Yes | Custom User-Agent for Open Food Facts. If empty the function returns 500 instead of calling upstream. |
+| `ALLOWED_ORIGIN` | No | CORS origin; set only if the frontend and the function are on different origins. A same-origin Pages deployment can leave it unset. |
+| `NODE_VERSION` | No | Build-time Node version, e.g. `20`. |
+
+**Why `functions/` and `_headers` are correct for Pages**
+
+- `functions/api/product/[barcode].ts` exports `onRequestGet`, which Pages maps to
+  `GET /api/product/:barcode`. It reads only `context.env` and `context.params`, uses the
+  Pages runtime `fetch` and `caches.default`, and never leaks stack traces.
+- `public/_headers` is copied by Vite to `dist/_headers`, which Pages applies to `/*`
+  (nosniff, no-referrer, camera permission, and a CSP that allows the self-hosted OCR worker
+  and WASM plus Open Food Facts product images from `https://*.openfoodfacts.org`).
+
+**Run locally with Wrangler** (`wrangler` is the dependency explained above)
+
+```
+npm run build          # produce dist/ (includes _headers and self-hosted OCR assets)
+npx wrangler pages dev dist --compatibility-date=2026-10-06
+# or: npm run pages:dev  (runs the build, then wrangler pages dev)
+```
+
+- `wrangler pages dev` serves `dist/` and auto-detects the `functions/` directory, so
+  `/api/product/:barcode` works locally. `vite dev` alone does **not** serve `/api`.
+- No Cloudflare login is needed to run `pages dev`; `npx wrangler login` is only for
+  `wrangler pages deploy`.
+- Put local variables in a gitignored `.dev.vars` file (copy `.dev.vars.example`), e.g.
+  `OFF_USER_AGENT=FoodCheck/1.0 (you@example.com)`.
+- Open the printed URL (default `http://localhost:8788`). `_headers` is applied by Pages dev.
+- A phone on the LAN needs HTTPS for camera and some OCR worker APIs; use the deployed Pages
+  URL, or a tunnel, for real-device camera testing.
+
+Deploy after manual testing with `npx wrangler pages deploy dist` (or connect the repo in the
+Pages dashboard and let it build on push).
 
 ## Wording rule
 

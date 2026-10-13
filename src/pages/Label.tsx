@@ -35,6 +35,7 @@ export default function Label() {
   const [text, setText] = useState('');
   const [confidence, setConfidence] = useState<OcrConfidence | null>(null);
   const [edited, setEdited] = useState(false);
+  const [simulated, setSimulated] = useState(false);
   const [phase, setPhase] = useState<Phase>('idle');
   const [progress, setProgress] = useState<OcrProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -127,9 +128,9 @@ export default function Label() {
       return;
     }
     navigate(`/result/${encodeURIComponent(barcode)}`, {
-      state: { observedText: text, ocrConfidence: confidence ?? 'LOW', edited },
+      state: { observedText: text, ocrConfidence: confidence ?? 'LOW', edited, simulated },
     });
-  }, [barcode, confidence, edited, navigate, text]);
+  }, [barcode, confidence, edited, navigate, simulated, text]);
 
   const handleTextChange = useCallback((value: string) => {
     setText(value);
@@ -162,6 +163,21 @@ export default function Label() {
       />
 
       {error ? <ErrorBanner message={error} /> : null}
+
+      <label className="flex items-start gap-2 rounded-xl bg-white p-3 text-sm text-brand-dark shadow-sm">
+        <input
+          type="checkbox"
+          checked={simulated}
+          onChange={(event) => setSimulated(event.target.checked)}
+          className="mt-0.5 h-5 w-5 accent-brand"
+        />
+        <span>
+          <span className="font-medium">{uiStrings.label.simulatedToggle}</span>
+          <span className="block text-xs text-brand-dark/70">
+            {uiStrings.label.simulatedToggleHint}
+          </span>
+        </span>
+      </label>
 
       {previewUrl && !isReading ? (
         <button
