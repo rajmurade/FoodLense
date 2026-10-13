@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mapConfidence } from '../confidence';
+import { mapConfidence, resolveConfirmedConfidence } from '../confidence';
 import { OCR_CONFIDENCE_THRESHOLDS } from '../constants';
 
 describe('mapConfidence', () => {
@@ -20,5 +20,25 @@ describe('mapConfidence', () => {
 
   it('treats a non-numeric score as LOW', () => {
     expect(mapConfidence(Number.NaN)).toBe('LOW');
+  });
+});
+
+describe('resolveConfirmedConfidence', () => {
+  it('uses HIGH when the user typed or edited the review text', () => {
+    expect(resolveConfirmedConfidence('LOW', true)).toBe('HIGH');
+    expect(resolveConfirmedConfidence('MEDIUM', true)).toBe('HIGH');
+    expect(resolveConfirmedConfidence('HIGH', true)).toBe('HIGH');
+  });
+
+  it('keeps the OCR confidence when the text was not edited', () => {
+    expect(resolveConfirmedConfidence('LOW', false)).toBe('LOW');
+    expect(resolveConfirmedConfidence('MEDIUM', false)).toBe('MEDIUM');
+    expect(resolveConfirmedConfidence('HIGH', false)).toBe('HIGH');
+  });
+
+  it('upgrades an unedited low-confidence reading only after an edit', () => {
+    const ocrConfidence = 'LOW' as const;
+    expect(resolveConfirmedConfidence(ocrConfidence, false)).toBe('LOW');
+    expect(resolveConfirmedConfidence(ocrConfidence, true)).toBe('HIGH');
   });
 });

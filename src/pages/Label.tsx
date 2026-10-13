@@ -34,6 +34,7 @@ export default function Label() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [text, setText] = useState('');
   const [confidence, setConfidence] = useState<OcrConfidence | null>(null);
+  const [edited, setEdited] = useState(false);
   const [phase, setPhase] = useState<Phase>('idle');
   const [progress, setProgress] = useState<OcrProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +55,7 @@ export default function Label() {
     setFile(null);
     setText('');
     setConfidence(null);
+    setEdited(false);
     setProgress(null);
     setError(null);
     setPhase('idle');
@@ -77,6 +79,7 @@ export default function Label() {
       setFile(chosen);
       setText('');
       setConfidence(null);
+      setEdited(false);
       setProgress(null);
       setError(null);
       setPhase('idle');
@@ -108,6 +111,7 @@ export default function Label() {
       const outcome = await runOcr(prepared, (update) => setProgress(update));
       setText(outcome.text);
       setConfidence(outcome.confidence);
+      setEdited(false);
       setPhase('review');
     } catch {
       setPhase('review');
@@ -123,9 +127,14 @@ export default function Label() {
       return;
     }
     navigate(`/result/${encodeURIComponent(barcode)}`, {
-      state: { observedText: text, confidence: confidence ?? 'LOW' },
+      state: { observedText: text, ocrConfidence: confidence ?? 'LOW', edited },
     });
-  }, [barcode, confidence, navigate, text]);
+  }, [barcode, confidence, edited, navigate, text]);
+
+  const handleTextChange = useCallback((value: string) => {
+    setText(value);
+    setEdited(true);
+  }, []);
 
   const isReading = phase === 'reading';
   const showReview = phase === 'review' || (phase === 'reading' && text.length > 0);
@@ -182,7 +191,7 @@ export default function Label() {
             </p>
           ) : null}
 
-          <TextReview value={text} onChange={setText} disabled={isReading} />
+          <TextReview value={text} onChange={handleTextChange} disabled={isReading} />
 
           <button
             type="button"

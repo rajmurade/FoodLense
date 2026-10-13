@@ -9,9 +9,15 @@ Prototype v1.0 for a college Community Engagement Project.
 
 ## Status
 
-**Steps 1-6 complete.** Shell/routing, barcode validation, product lookup, the Product page
-wired to the lookup, deterministic ingredient normalisation + comparison, and label photo
-capture/upload with in-browser OCR and an editable review step.
+**Steps 1-7 complete.** Shell/routing, barcode validation, product lookup, the Product page
+wired to the lookup, deterministic ingredient normalisation + comparison, label photo
+capture/upload with in-browser OCR and an editable review step, and the Result page.
+
+- Result page (`src/pages/Result.tsx`) shows separate Observed, Reference, Conclusion, Limits
+  and Next steps blocks, the required disclaimer line, the source and retrieval time, an
+  optional "Simulated test" badge for simulated text, and links back to the label, the Guide
+  and Scan. `src/lib/confidence.ts:resolveConfirmedConfidence` makes any user-typed or edited
+  review text count as user-confirmed (HIGH); an untouched low-confidence reading stays LOW.
 
 - Implemented: shell/routing; `src/lib/barcode.ts` (EAN-13/EAN-8/UPC-A validation, UPC-A
   padded to 13 digits for upstream lookups); `src/lib/api.ts` lookup core (validate → cache →
@@ -23,7 +29,7 @@ capture/upload with in-browser OCR and an editable review step.
   spelling variants); `src/lib/imageValidation.ts` (JPEG/PNG/WebP magic-byte check, 5 MB limit),
   `src/lib/ocr.ts` (canvas resize to 1600 px long side + `tesseract.js` worker) and the Label
   page + `ImagePicker`, `OcrProgress`, `ConfidenceLabel`, `TextReview` components.
-- Not implemented: result page, camera barcode scan, Guide/About content, deploy config.
+- Not implemented: camera barcode scan, Guide/About content, deploy config.
 - Simulated: nothing. Tests use a mocked upstream and clearly labelled placeholder data
   ("Sample Product, simulated test"); no real network is called in tests. Deliberately
   altered label text must be shown with the "Simulated test" label (`src/data/simulated.ts`).
