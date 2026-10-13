@@ -14,4 +14,5 @@ export const BANNED_WORDS = [
 export const ALLOWED_DISCLAIMER_SENTENCES = [
   'This does not confirm the product is genuine or safe.',
   'FoodCheck compares labels with database records. It is not a lab test and cannot confirm a food is safe or genuine.',
+  'A database record does not prove this pack is genuine.',
 ] as const;

@@ -43,6 +43,7 @@ describe('banned words in UI strings', () => {
   it('allowlists only the exact required disclaimer sentences', () => {
     expect(ALLOWED_DISCLAIMER_SENTENCES).toContain(uiStrings.footer.disclaimer);
     expect(ALLOWED_DISCLAIMER_SENTENCES).toContain(uiStrings.result.disclaimer);
+    expect(ALLOWED_DISCLAIMER_SENTENCES).toContain(uiStrings.product.caveat);
   });
 
   it.each([...BANNED_WORDS])('does not contain the banned term "%s"', (term) => {

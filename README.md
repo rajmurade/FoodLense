@@ -9,14 +9,28 @@ Prototype v1.0 for a college Community Engagement Project.
 
 ## Status
 
-**Step 1 complete: project shell only.** Routes, layout, header, bottom tab bar and the
-persistent footer disclaimer exist; every page is an empty placeholder. No lookup, OCR,
-comparison or result logic is implemented yet.
+**Steps 1-5 complete.** Shell/routing, barcode validation, product lookup, the Product page
+wired to the lookup, and deterministic ingredient normalisation + comparison.
 
-- Not implemented: barcode utilities, product lookup, ingredient comparison, photo/OCR,
-  result page, camera scan, Guide/About content, deploy config.
-- Simulated: nothing yet. Placeholder strings only.
-- Known limitations: all screens are placeholders; no data is fetched.
+- Implemented: shell/routing; `src/lib/barcode.ts` (EAN-13/EAN-8/UPC-A validation, UPC-A
+  padded to 13 digits for upstream lookups); `src/lib/api.ts` lookup core (validate → cache →
+  Open Food Facts fetch with 5 s timeout, one retry on timeout/5xx, normalise, cache,
+  stale-on-failure) with the Cloudflare Pages Function adapter in
+  `functions/api/product/[barcode].ts`; `src/lib/productClient.ts` + Product page
+  (loading / found / not-found / no-ingredients / upstream-error states); `src/lib/normalize.ts`,
+  `src/lib/compare.ts`, `src/lib/constants.ts` (comparison thresholds, declaration phrases,
+  spelling variants).
+- Not implemented: photo/OCR capture and review, result page, camera scan, Guide/About
+  content, deploy config.
+- Simulated: nothing. Tests use a mocked upstream and clearly labelled placeholder data
+  ("Sample Product, simulated test"); no real network is called in tests. Deliberately
+  altered label text must be shown with the "Simulated test" label (`src/data/simulated.ts`).
+- Known limitations: the Cloudflare Pages Function adapter (edge cache, CORS, Response
+  mapping) is not unit tested here; it needs an environment with the Cloudflare Cache API.
+  The Product page needs the Pages Function running (e.g. `wrangler pages dev`) to load data;
+  plain `vite dev` does not serve `/api`. The real Open Food Facts API has not been contacted
+  yet (see below). The declaration-phrase and spelling-variant lists are small starting sets
+  from `docs/specs.md`; the comparison thresholds are the documented starting values.
 
 ## Requirements
 

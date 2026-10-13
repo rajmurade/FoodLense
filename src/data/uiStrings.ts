@@ -1,3 +1,5 @@
+import { SIMULATED_TEST_LABEL } from './simulated';
+
 export const uiStrings = {
   app: {
     name: 'FoodCheck',
@@ -24,6 +26,32 @@ export const uiStrings = {
   },
   result: {
     disclaimer: 'This does not confirm the product is genuine or safe.',
+  },
+  steps: {
+    progressLabel: 'Progress',
+    labels: ['Barcode', 'Product', 'Label', 'Review', 'Result'],
+    stepTemplate: 'Step {n} of 5',
+  },
+  product: {
+    loading: 'Loading product record…',
+    sourceLabel: 'Source: Open Food Facts (community data)',
+    retrievedLabel: 'Retrieved',
+    barcodeLabel: 'Barcode',
+    ingredientsHeading: 'Ingredients (from database)',
+    unavailable: 'Not available',
+    ingredientsUnavailable: 'Not available in this record',
+    caveat: 'A database record does not prove this pack is genuine.',
+    notFoundTitle: 'Not in the database.',
+    notFoundBody:
+      'This is common for local products. You can still photograph the label; the result will be Insufficient evidence.',
+    noIngredients:
+      'This record has no ingredient list. The comparison will return Insufficient evidence.',
+    next: 'Next: photograph the ingredient list',
+    continueWithoutRecord: 'Continue without record',
+    retry: 'Retry',
+  },
+  simulated: {
+    label: SIMULATED_TEST_LABEL,
   },
   pages: {
     homeTitle: 'FoodCheck',
