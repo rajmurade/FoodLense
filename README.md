@@ -35,25 +35,29 @@ Scan page with camera barcode reading plus a typed fallback.
   The scanner stops its video tracks when the screen unmounts, and every read is validated by
   `src/lib/barcode.ts` before navigating to `/product/:barcode`.
 - Not implemented: Guide/About content.
-- Deployment: Cloudflare Pages configuration is prepared and documented below (build settings,
-  environment variables, local `wrangler pages dev`); the deployed HTTPS smoke test is still
-  to be done on a real phone.
+- Deployment: both paths are prepared and documented below. `wrangler.jsonc` + `src/worker.ts`
+  deploy with `npx wrangler deploy` (Worker serves `dist/` static assets with SPA fallback and
+  handles `/api/*`); `functions/` remains valid for `wrangler pages deploy`. Both share
+  `src/lib/edge.ts`. The deployed HTTPS smoke test is still to be done on a real phone.
 - Simulated: nothing. Tests use a mocked upstream and clearly labelled placeholder data
   ("Sample Product, simulated test"); no real network is called in tests. Deliberately
   altered label text must be shown with the "Simulated test" label (`src/data/simulated.ts`).
 - OCR assets are self-hosted under `public/ocr/` (worker, LSTM core variants, `eng.traineddata`)
   so no photo or text leaves the device and no CDN is contacted. `public/_headers` sets a
   conservative CSP for the OCR worker/WASM.
-- Known limitations: the Cloudflare Pages Function adapter (edge cache, CORS, Response
-  mapping) is not unit tested here; it needs an environment with the Cloudflare Cache API.
-  The Product page needs the Pages Function running (e.g. `wrangler pages dev`) to load data;
-  plain `vite dev` does not serve `/api`. The real Open Food Facts API has not been contacted
-  yet (see below). The declaration-phrase and spelling-variant lists are small starting sets
-  from `docs/specs.md`; the comparison thresholds are the documented starting values. OCR has
-  not been run on real packs or a phone here (browser-only code); the camera barcode scanner
-  (`@zxing/browser`) has not been run in a browser or on a real pack here either, because it
-  needs a camera and an HTTPS (or localhost) origin. Camera permission denied, no camera,
-  iPhone Safari and the deployed HTTPS URL still need manual device testing.
+- Known limitations: the shared edge adapter in `src/lib/edge.ts` (routing match, missing
+  User-Agent, invalid barcode, upstream 404) is unit tested with a mocked `fetch`, but the real
+  Cloudflare Cache API binding (`caches.default`) and the static-asset Worker routing
+  (`run_worker_first`, SPA fallback, `_headers`) can only be verified in a real Wrangler/Cloudflare
+  environment, not here. The Product page needs the Worker or Pages Function running (e.g.
+  `wrangler dev` or `wrangler pages dev`) to load data; plain `vite dev` does not serve `/api`.
+  The real Open Food Facts API has not been contacted yet (see below). The declaration-phrase and
+  spelling-variant lists are small starting sets from `docs/specs.md`; the comparison thresholds
+  are the documented starting values. OCR has not been run on real packs or a phone here
+  (browser-only code); the camera barcode scanner (`@zxing/browser`) has not been run in a
+  browser or on a real pack here either, because it needs a camera and an HTTPS (or localhost)
+  origin. Camera permission denied, no camera, iPhone Safari and the deployed HTTPS URL still
+  need manual device testing.
 
 ## Requirements
 
@@ -92,9 +96,10 @@ npm run preview    # serve the production build
   bundled with it and is not a separate entry in `package.json`.
 - `typescript` — strict typing across the app.
 - `vitest` — unit tests for pure logic and the banned-words check.
-- `wrangler` (dev) — Cloudflare's CLI. Used only for local/preview testing of the Pages
-  Function in `functions/` and the `_headers` file, because `vite dev` does not run
-  serverless functions. It is a dev dependency and is not shipped to the browser.
+- `wrangler` (dev) — Cloudflare's CLI. Used to deploy the Worker (`wrangler deploy`), to run the
+  Worker and static assets locally (`wrangler dev`), and for local/preview testing of the Pages
+  Function in `functions/` and the `_headers` file (`wrangler pages dev`), because `vite dev`
+  does not run serverless functions. It is a dev dependency and is not shipped to the browser.
 - `@types/react`, `@types/react-dom`, `@types/node` — type definitions for the above.
 
 No database, accounts, LLM, cloud OCR or paid API is used.
@@ -116,14 +121,62 @@ and re-download `eng.traineddata.gz`. `public/_headers` allows the worker, the W
 
 ## Environment variables
 
-The server function reads its variables from the Pages environment. For local Wrangler runs,
-copy `.dev.vars.example` to `.dev.vars`; for the deployed project, set them in the Pages
-dashboard. `.env.example` lists the same names. Secrets are never bundled into the frontend.
+The server-side endpoint (Worker or Pages Function) reads its variables from the Cloudflare
+environment. For local Wrangler runs, copy `.dev.vars.example` to `.dev.vars`; for the deployed
+project, set them as Worker secrets/variables (see Deploy below) or in the Pages dashboard.
+`.env.example` lists the same names. Secrets are never bundled into the frontend.
 
-## Deploy to Cloudflare Pages
+## Deploy
 
-The app is a static SPA (`dist/`) plus one Pages Function that proxies Open Food Facts so the
-custom User-Agent and cache stay server-side.
+The app is a static SPA (`dist/`) plus one server-side endpoint that proxies Open Food Facts so
+the custom User-Agent and cache stay server-side. There are two equivalent ways to deploy it,
+and both reuse the same lookup adapter.
+
+### Workers (`npx wrangler deploy`) — the default
+
+`wrangler.jsonc` deploys a Worker (`src/worker.ts`) that also serves the built `dist/` folder as
+static assets:
+
+- `assets.directory: "./dist"` uploads the Vite build (including `dist/_headers` and the
+  self-hosted OCR files). Cloudflare applies `_headers` to those static assets, so the CSP,
+  `nosniff`, `no-referrer` and `Permissions-Policy: camera=(self)` still apply.
+- `assets.run_worker_first: ["/api/*"]` sends every `/api/*` request to the Worker before the
+  asset server, so API calls are never answered with the SPA's `index.html`.
+- `assets.not_found_handling: "single-page-application"` serves `index.html` for unknown
+  non-API paths, which is the SPA fallback for the client-side routes.
+
+`src/worker.ts` handles `GET /api/product/:barcode` by calling the shared adapter in
+`src/lib/edge.ts`, which calls the unchanged lookup core `lookupProduct` in `src/lib/api.ts`.
+That keeps the same barcode validation, edge cache, 5 s timeout, one retry, upstream
+normalisation and `{ error: { code, message } }` shape as the Pages Function. Unknown `/api/*`
+paths get a JSON 404 and non-GET requests to the product route get a JSON 405, so the client
+never receives the SPA HTML for an API call.
+
+**Environment variables (Workers)**
+
+| Name | Required | Purpose |
+|---|---|---|
+| `OFF_USER_AGENT` | Yes | Custom User-Agent for Open Food Facts. If empty the endpoint returns a JSON 500 instead of calling upstream. |
+| `ALLOWED_ORIGIN` | No | CORS origin; set only if the frontend and the endpoint are on different origins. A same-origin deployment can leave it unset. |
+
+Set them with `npx wrangler secret put OFF_USER_AGENT` (or the dashboard: Workers & Pages →
+your Worker → Settings → Variables). For local runs, put them in the gitignored `.dev.vars`
+file (copy `.dev.vars.example`).
+
+```
+npm run build            # produce dist/
+npx wrangler dev         # local Worker + static assets; reads .dev.vars
+npx wrangler deploy      # deploy after manual testing
+```
+
+`wrangler dev` serves the worker at its local URL and applies `dist/_headers`. A phone on the
+LAN needs HTTPS for the camera; use the deployed `*.workers.dev` HTTPS URL for real-device
+camera testing.
+
+### Cloudflare Pages (`functions/`, kept working)
+
+The app can still be deployed as Pages with the Function in `functions/`. Both deployments share
+`src/lib/edge.ts` and the lookup core, so behaviour is identical.
 
 **Pages project build settings**
 
@@ -148,8 +201,10 @@ Preview)
 **Why `functions/` and `_headers` are correct for Pages**
 
 - `functions/api/product/[barcode].ts` exports `onRequestGet`, which Pages maps to
-  `GET /api/product/:barcode`. It reads only `context.env` and `context.params`, uses the
-  Pages runtime `fetch` and `caches.default`, and never leaks stack traces.
+  `GET /api/product/:barcode`. It is a thin wrapper over `handleProductLookup` in
+  `src/lib/edge.ts` (the same adapter the Worker uses), so it keeps the same barcode validation,
+  cache, timeout, retry and error shape. It reads only `context.env` and `context.params`, uses
+  the Pages runtime `fetch` and `caches.default`, and never leaks stack traces.
 - `public/_headers` is copied by Vite to `dist/_headers`, which Pages applies to `/*`
   (nosniff, no-referrer, camera permission, and a CSP that allows the self-hosted OCR worker
   and WASM plus Open Food Facts product images from `https://*.openfoodfacts.org`).

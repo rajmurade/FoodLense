@@ -1,4 +1,5 @@
-# Local variables for `wrangler pages dev` (Cloudflare Pages Functions).
-# Copy to `.dev.vars` (gitignored) and fill in. Same names as the Pages dashboard.
-OFF_USER_AGENT=FoodCheck/1.0 (freefireheroic4442gmail.com)
+# Local variables for `wrangler dev` (Worker + static assets) and
+# `wrangler pages dev` (Pages Functions). Copy to `.dev.vars` (gitignored) and fill in.
+# Same names as the Worker secrets/variables and the Pages dashboard.
+OFF_USER_AGENT=FoodCheck/1.0 (you@example.com)
 ALLOWED_ORIGIN=
