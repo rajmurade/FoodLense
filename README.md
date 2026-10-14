@@ -9,9 +9,10 @@ Prototype v1.0 for a college Community Engagement Project.
 
 ## Status
 
-**Steps 1-7 complete.** Shell/routing, barcode validation, product lookup, the Product page
+**Steps 1-8 complete.** Shell/routing, barcode validation, product lookup, the Product page
 wired to the lookup, deterministic ingredient normalisation + comparison, label photo
-capture/upload with in-browser OCR and an editable review step, and the Result page.
+capture/upload with in-browser OCR and an editable review step, the Result page, and the
+Scan page with camera barcode reading plus a typed fallback.
 
 - Result page (`src/pages/Result.tsx`) shows separate Observed, Reference, Conclusion, Limits
   and Next steps blocks, the required disclaimer line, the source and retrieval time, an
@@ -28,8 +29,12 @@ capture/upload with in-browser OCR and an editable review step, and the Result p
   `src/lib/compare.ts`, `src/lib/constants.ts` (comparison thresholds, declaration phrases,
   spelling variants); `src/lib/imageValidation.ts` (JPEG/PNG/WebP magic-byte check, 5 MB limit),
   `src/lib/ocr.ts` (canvas resize to 1600 px long side + `tesseract.js` worker) and the Label
-  page + `ImagePicker`, `OcrProgress`, `ConfidenceLabel`, `TextReview` components.
-- Not implemented: camera barcode scan, Guide/About content.
+  page + `ImagePicker`, `OcrProgress`, `ConfidenceLabel`, `TextReview` components; the Scan page
+  with `src/lib/scan.ts` (two-identical-read confirmation, camera availability check) and the
+  `BarcodeScanner` (`@zxing/browser`, EAN-13/EAN-8/UPC-A only) + `BarcodeInput` components.
+  The scanner stops its video tracks when the screen unmounts, and every read is validated by
+  `src/lib/barcode.ts` before navigating to `/product/:barcode`.
+- Not implemented: Guide/About content.
 - Deployment: Cloudflare Pages configuration is prepared and documented below (build settings,
   environment variables, local `wrangler pages dev`); the deployed HTTPS smoke test is still
   to be done on a real phone.
@@ -45,8 +50,10 @@ capture/upload with in-browser OCR and an editable review step, and the Result p
   plain `vite dev` does not serve `/api`. The real Open Food Facts API has not been contacted
   yet (see below). The declaration-phrase and spelling-variant lists are small starting sets
   from `docs/specs.md`; the comparison thresholds are the documented starting values. OCR has
-  not been run on real packs or a phone here (browser-only code); camera capture, iPhone Safari
-  and the deployed HTTPS URL still need manual device testing.
+  not been run on real packs or a phone here (browser-only code); the camera barcode scanner
+  (`@zxing/browser`) has not been run in a browser or on a real pack here either, because it
+  needs a camera and an HTTPS (or localhost) origin. Camera permission denied, no camera,
+  iPhone Safari and the deployed HTTPS URL still need manual device testing.
 
 ## Requirements
 
@@ -76,6 +83,13 @@ npm run preview    # serve the production build
 - `vite`, `@vitejs/plugin-react` — dev server and production build.
 - `tesseract.js` — in-browser OCR so label photos never leave the device. The worker, core
   and English language data are self-hosted under `public/ocr/` (see OCR assets below).
+- `@zxing/browser` — camera barcode decoding on the Scan page. It is the maintained browser
+  port of ZXing ("zebra crossing") and reads frames from the device camera in the browser, so
+  no barcode image or video leaves the phone. It is used only on the Scan page, alongside a
+  typed fallback; every decoded value is still checked by `src/lib/barcode.ts` (length, digits
+  only, and check digit) before any network request. It is preferred over hand-rolling barcode
+  decoding, per the rule in `AGENTS.md` section 4. Its `@zxing/library` codec dependency is
+  bundled with it and is not a separate entry in `package.json`.
 - `typescript` — strict typing across the app.
 - `vitest` — unit tests for pure logic and the banned-words check.
 - `wrangler` (dev) — Cloudflare's CLI. Used only for local/preview testing of the Pages
