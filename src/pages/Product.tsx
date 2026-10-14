@@ -13,10 +13,10 @@ type PageState =
   | { status: 'ready'; data: ProductResponse }
   | { status: 'error'; error: ApiErrorBody['error'] };
 
-function MissingIngredientsNote() {
+function OpenFoodFactsNote({ text }: { text: string }) {
   return (
     <p className="text-sm text-brand-dark/70">
-      {uiStrings.product.missingIngredientsNote}
+      {text}
       <a
         href="https://world.openfoodfacts.org/"
         target="_blank"
@@ -112,7 +112,7 @@ export default function Product() {
           >
             {uiStrings.product.continueWithoutRecord}
           </Link>
-          <MissingIngredientsNote />
+          <OpenFoodFactsNote text={uiStrings.product.notFoundNote} />
         </div>
       ) : null}
 
@@ -123,7 +123,7 @@ export default function Product() {
           {state.data.product.ingredientsText ? null : (
             <div className="space-y-2 rounded-xl bg-slate-100 p-3">
               <p className="text-sm text-slate-700">{uiStrings.product.noIngredients}</p>
-              <MissingIngredientsNote />
+              <OpenFoodFactsNote text={uiStrings.product.missingIngredientsNote} />
             </div>
           )}
 
