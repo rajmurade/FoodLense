@@ -24,6 +24,15 @@ export const uiStrings = {
       'FoodCheck compares labels with database records. It is not a lab test and cannot confirm a food is safe or genuine.',
     helpLabel: 'Help',
   },
+  home: {
+    scanBarcode: 'Scan a barcode',
+    typeBarcode: 'Type a barcode',
+    readLabel: 'How to read a label',
+    officialHelp: 'Official help channels',
+    howItWorksTitle: 'How it works',
+    howItWorks: ['Scan or enter', 'Photograph ingredients', 'See what matches'],
+    note: 'Guidance based on available data. Not a lab test. For confirmed results contact official food testing laboratories.',
+  },
   result: {
     disclaimer: 'This does not confirm the product is genuine or safe.',
     heading: 'Comparison result',

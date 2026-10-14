@@ -9,55 +9,81 @@ Prototype v1.0 for a college Community Engagement Project.
 
 ## Status
 
-**Steps 1-8 complete.** Shell/routing, barcode validation, product lookup, the Product page
-wired to the lookup, deterministic ingredient normalisation + comparison, label photo
-capture/upload with in-browser OCR and an editable review step, the Result page, and the
-Scan page with camera barcode reading plus a typed fallback.
+**P0 steps 1-10 complete. P1 has not been started.** The list below separates what is
+implemented, what is incomplete, what is simulated, and the known limitations.
 
-- Result page (`src/pages/Result.tsx`) shows separate Observed, Reference, Conclusion, Limits
-  and Next steps blocks, the required disclaimer line, the source and retrieval time, an
-  optional "Simulated test" badge for simulated text, and links back to the label, the Guide
-  and Scan. `src/lib/confidence.ts:resolveConfirmedConfidence` makes any user-typed or edited
-  review text count as user-confirmed (HIGH); an untouched low-confidence reading stays LOW.
+### Implemented
 
-- Implemented: shell/routing; `src/lib/barcode.ts` (EAN-13/EAN-8/UPC-A validation, UPC-A
-  padded to 13 digits for upstream lookups); `src/lib/api.ts` lookup core (validate → cache →
-  Open Food Facts fetch with 5 s timeout, one retry on timeout/5xx, normalise, cache,
-  stale-on-failure) with the Cloudflare Pages Function adapter in
-  `functions/api/product/[barcode].ts`; `src/lib/productClient.ts` + Product page
-  (loading / found / not-found / no-ingredients / upstream-error states); `src/lib/normalize.ts`,
-  `src/lib/compare.ts`, `src/lib/constants.ts` (comparison thresholds, declaration phrases,
-  spelling variants); `src/lib/imageValidation.ts` (JPEG/PNG/WebP magic-byte check, 5 MB limit),
-  `src/lib/ocr.ts` (canvas resize to 1600 px long side + `tesseract.js` worker) and the Label
-  page + `ImagePicker`, `OcrProgress`, `ConfidenceLabel`, `TextReview` components; the Scan page
-  with `src/lib/scan.ts` (two-identical-read confirmation, camera availability check) and the
-  `BarcodeScanner` (`@zxing/browser`, EAN-13/EAN-8/UPC-A only) + `BarcodeInput` components.
-  The scanner stops its video tracks when the screen unmounts, and every read is validated by
-  `src/lib/barcode.ts` before navigating to `/product/:barcode`.
-- Not implemented: Guide/About content.
-- Deployment: both paths are prepared and documented below. `wrangler.jsonc` + `src/worker.ts`
-  deploy with `npx wrangler deploy` (Worker serves `dist/` static assets with SPA fallback and
-  handles `/api/*`); `functions/` remains valid for `wrangler pages deploy`. Both share
-  `src/lib/edge.ts`. The deployed HTTPS smoke test is still to be done on a real phone.
-- Simulated: nothing. Tests use a mocked upstream and clearly labelled placeholder data
-  ("Sample Product, simulated test"); no real network is called in tests. Deliberately
-  altered label text must be shown with the "Simulated test" label (`src/data/simulated.ts`).
-- OCR assets are self-hosted under `public/ocr/` (worker, LSTM core variants, `eng.traineddata`)
-  so no photo or text leaves the device and no CDN is contacted. `public/_headers` sets a
-  conservative CSP for the OCR worker/WASM.
-- Known limitations: the shared edge adapter in `src/lib/edge.ts` (routing match, missing
-  User-Agent, invalid barcode, upstream 404) is unit tested with a mocked `fetch`, but the real
-  Cloudflare Cache API binding (`caches.default`) and the static-asset Worker routing
-  (`run_worker_first`, SPA fallback, `_headers`) can only be verified in a real Wrangler/Cloudflare
-  environment, not here. The Product page needs the Worker or Pages Function running (e.g.
-  `wrangler dev` or `wrangler pages dev`) to load data; plain `vite dev` does not serve `/api`.
-  The real Open Food Facts API has not been contacted yet (see below). The declaration-phrase and
-  spelling-variant lists are small starting sets from `docs/specs.md`; the comparison thresholds
-  are the documented starting values. OCR has not been run on real packs or a phone here
-  (browser-only code); the camera barcode scanner (`@zxing/browser`) has not been run in a
-  browser or on a real pack here either, because it needs a camera and an HTTPS (or localhost)
-  origin. Camera permission denied, no camera, iPhone Safari and the deployed HTTPS URL still
-  need manual device testing.
+Shell/routing (header, tab bar, footer disclaimer, skip link), and the Home page
+(`src/pages/Home.tsx`, `docs/UI_UX.md` §4.2: tagline, Scan / Type / Guide / Official-help
+actions, the three-step "How it works" list and the required note; no greeting).
+
+- Barcode: `src/lib/barcode.ts` (EAN-13/EAN-8/UPC-A validation, UPC-A padded to 13 digits for
+  upstream lookups).
+- Product lookup: `src/lib/api.ts` (validate → cache → Open Food Facts fetch with 5 s timeout,
+  one retry on timeout/5xx, normalise, cache, stale-on-failure), shared edge adapter
+  `src/lib/edge.ts`, Worker entry `src/worker.ts`, Pages Function
+  `functions/api/product/[barcode].ts`.
+- Product page + `src/lib/productClient.ts` (loading / found / not-found / no-ingredients /
+  upstream-error states).
+- Normalise + compare: `src/lib/normalize.ts`, `src/lib/compare.ts`, `src/lib/constants.ts`
+  (comparison thresholds, declaration phrases, spelling variants).
+- Label flow: `src/lib/imageValidation.ts` (JPEG/PNG/WebP magic-byte check, 5 MB limit),
+  `src/lib/ocr.ts` (canvas resize to 1600 px + self-hosted `tesseract.js`), editable review
+  (`src/components/TextReview.tsx`), confidence label, and the "Simulated test" toggle.
+- Result page (`src/pages/Result.tsx`): Observed / Reference / Conclusion / limits / next-steps
+  blocks, the required disclaimer, source + retrieval time, and the
+  `src/lib/confidence.ts:resolveConfirmedConfidence` rule (edited or typed review text counts
+  as user-confirmed HIGH; an untouched low-confidence reading stays LOW).
+- Scan page: `src/lib/scan.ts` and `@zxing/browser` camera decode with a typed fallback; every
+  decoded value is validated before any network call.
+- Guide + Help (`src/pages/Guide.tsx`, `/guide` and `/guide#help`): how to read a label, and the
+  official channels from `docs/specs.md` §6.5, stating that FoodCheck reports nothing.
+- About (`src/pages/About.tsx`): what it does and does not do, sources, limits, privacy notice,
+  and "Prototype v1.0 built for a college Community Engagement Project".
+- Error boundary (`src/components/ErrorBoundary.tsx`) and offline banner
+  (`src/components/OfflineBanner.tsx`), both announced with `role="alert"`.
+- Accessibility pass: labelled inputs, visible focus rings, 44 px tap targets, `role="alert"`
+  errors, a skip link, and scroll-to-top + heading focus on route change.
+
+### Incomplete (P0 follow-ups, tracked but not built)
+
+- Deployed HTTPS smoke test on a real phone (see Manual tests below).
+- Real-device camera capture and OCR on real packs.
+- A saved fallback demo, recorded and labelled as such (`AGENTS.md` §8) — not built.
+- `/history` is P1 (local to device) and has not been started.
+
+### Deployment
+
+Both paths are prepared and documented below. `wrangler.jsonc` + `src/worker.ts` deploy with
+`npx wrangler deploy` (Worker serves `dist/` static assets with SPA fallback and handles
+`/api/*`); `functions/` remains valid for `npx wrangler pages deploy`. Both share
+`src/lib/edge.ts`. The deployed HTTPS smoke test is still to be done on a real phone.
+
+### OCR assets (self-hosted)
+
+`public/ocr/` holds the `tesseract.js` worker, LSTM core variants and `eng.traineddata.gz`, so
+no photo or text leaves the device and no CDN is contacted. `public/_headers` sets a
+conservative CSP for the OCR worker/WASM.
+
+### Known limitations
+
+- The shared edge adapter in `src/lib/edge.ts` (routing match, missing User-Agent, invalid
+  barcode, upstream 404) is unit tested with a mocked `fetch`, but the real Cloudflare Cache API
+  binding (`caches.default`) and the static-asset Worker routing (`run_worker_first`, SPA
+  fallback, `_headers`) can only be verified in a real Wrangler/Cloudflare environment, not here.
+- The Product page needs the Worker or Pages Function running (e.g. `wrangler dev` or
+  `wrangler pages dev`) to load data; plain `vite dev` does not serve `/api`.
+- The real Open Food Facts API has not been contacted from a deployed environment here.
+- The declaration-phrase and spelling-variant lists are small starting sets from
+  `docs/specs.md`; the comparison thresholds are the documented starting values.
+- OCR has not been run on real packs or a phone here (browser-only code), and the camera
+  barcode scanner (`@zxing/browser`) has not been run on a real device here because it needs a
+  camera and an HTTPS (or localhost) origin.
+- The Guide's FSSAI source is cited by name; the docs describe a regulation link but do not
+  give a URL, so none is shown (no links were invented).
+- Secondary flows (camera permission denied, no camera, iPhone Safari, offline banner, a real
+  runtime crash, and the deployed HTTPS URL) still need manual device testing.
 
 ## Requirements
 
@@ -92,8 +118,11 @@ npm run preview    # serve the production build
   no barcode image or video leaves the phone. It is used only on the Scan page, alongside a
   typed fallback; every decoded value is still checked by `src/lib/barcode.ts` (length, digits
   only, and check digit) before any network request. It is preferred over hand-rolling barcode
-  decoding, per the rule in `AGENTS.md` section 4. Its `@zxing/library` codec dependency is
-  bundled with it and is not a separate entry in `package.json`.
+  decoding, per the rule in `AGENTS.md` section 4.
+- `@zxing/library` — the ZXing codec that `@zxing/browser` builds on. It is declared explicitly
+  in `dependencies` (and pinned in `package-lock.json`) rather than left implicit, and is
+  resolved from the same server-assigned address as the browser package, so the Scan page keeps
+  a stable, auditable barcode dependency tree.
 - `typescript` — strict typing across the app.
 - `vitest` — unit tests for pure logic and the banned-words check.
 - `wrangler` (dev) — Cloudflare's CLI. Used to deploy the Worker (`wrangler deploy`), to run the
@@ -229,6 +258,33 @@ npx wrangler pages dev dist --compatibility-date=2026-10-06
 
 Deploy after manual testing with `npx wrangler pages deploy dist` (or connect the repo in the
 Pages dashboard and let it build on push).
+
+## Manual tests still needed
+
+These cannot be verified in this environment (no camera, no phone, no deployed URL, browser-only
+OCR). They must be run on a device and the results recorded by the user before v1.0 is called
+done (`AGENTS.md` §5 and §8):
+
+1. **Camera barcode scan** on a phone over HTTPS (`*.workers.dev` or Pages URL): a real EAN-13,
+   an EAN-8 and a UPC-A; the "read twice" confirmation; the typed fallback when the camera is
+   unavailable; and the permission-denied, insecure-origin and unsupported-browser messages.
+2. **Photo + OCR on real packs**: JPEG, PNG and WebP; a file over 5 MB is rejected; the resize
+   to 1600 px; a clear pack (expect a higher confidence) and a poor photo (expect the
+   low-confidence warning); OCR failure then manual typing; and that the edited text is used for
+   the comparison.
+3. **End-to-end flow on a phone**: scan → product record (found and not-found) → label →
+   review → result, including the three classifications and the required disclaimer on each.
+4. **iPhone Safari** specifically: camera access, OCR worker/WASM loading under the CSP, layout
+   at 320 px, and 200% text zoom without breaking the layout.
+5. **Deployed HTTPS smoke test**: build and deploy, then confirm `/api/product/:barcode` returns
+   the JSON error shape (not the SPA HTML) for a bad barcode and unknown `/api/*` paths, that the
+   custom `OFF_USER_AGENT` is sent, and that `_headers` (CSP, nosniff, no-referrer, camera
+   permission) is applied.
+6. **Offline banner**: toggle airplane mode and confirm the banner appears and disappears.
+7. **Error boundary**: force a runtime error in a route and confirm the fallback with `Retry` and
+   "Go to home" works.
+8. **Guide/Help links**: confirm the Food Safety Connect link opens (opening each link before the
+   demo is required by `docs/specs.md` §6.5).
 
 ## Wording rule
 
