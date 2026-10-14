@@ -89,6 +89,9 @@ export const uiStrings = {
       'This is common for local products. You can still photograph the label; the result will be Insufficient evidence.',
     noIngredients:
       'This record has no ingredient list. The comparison will return Insufficient evidence.',
+    missingIngredientsNote:
+      'This product has no ingredient list in Open Food Facts, a community database. Anyone can add it for free on ',
+    openFoodFactsLink: 'openfoodfacts.org',
     next: 'Next: photograph the ingredient list',
     continueWithoutRecord: 'Continue without record',
     retry: 'Retry',

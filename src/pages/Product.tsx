@@ -13,6 +13,23 @@ type PageState =
   | { status: 'ready'; data: ProductResponse }
   | { status: 'error'; error: ApiErrorBody['error'] };
 
+function MissingIngredientsNote() {
+  return (
+    <p className="text-sm text-brand-dark/70">
+      {uiStrings.product.missingIngredientsNote}
+      <a
+        href="https://world.openfoodfacts.org/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-medium text-brand underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+      >
+        {uiStrings.product.openFoodFactsLink}
+      </a>
+      .
+    </p>
+  );
+}
+
 export default function Product() {
   const { barcode = '' } = useParams();
   const navigate = useNavigate();
@@ -95,6 +112,7 @@ export default function Product() {
           >
             {uiStrings.product.continueWithoutRecord}
           </Link>
+          <MissingIngredientsNote />
         </div>
       ) : null}
 
@@ -103,9 +121,10 @@ export default function Product() {
           <ProductCard data={state.data} />
 
           {state.data.product.ingredientsText ? null : (
-            <p className="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">
-              {uiStrings.product.noIngredients}
-            </p>
+            <div className="space-y-2 rounded-xl bg-slate-100 p-3">
+              <p className="text-sm text-slate-700">{uiStrings.product.noIngredients}</p>
+              <MissingIngredientsNote />
+            </div>
           )}
 
           <Link
