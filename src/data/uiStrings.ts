@@ -160,6 +160,61 @@ export const uiStrings = {
     notFoundTitle: 'Page not found',
     placeholder: 'This screen will be built in a later step.',
   },
+  guide: {
+    howToReadTitle: 'How to read a label',
+    howToReadIntro:
+      'On pre-packaged food in India, the label provides the basic information you can check for yourself. The points below are based on general labelling provisions (FSSAI Labelling and Display Regulations 2020 and amendments), explained in plain language.',
+    points: {
+      name: 'Name of the food: The product name should appear clearly on the pack.',
+      ingredients: 'Ingredient list: Ingredients are usually listed in descending order by weight. Look for the full list, not just highlights.',
+      nutrition: 'Nutrition information: Should show key nutrients per serving or per 100 g/ml as applicable.',
+      fssaiInfo: 'FSSAI details: The pack may show the FSSAI licence number (14 digits). This is not a proof of the contents, only a formatting hint to check via official channels.',
+      dates: 'Dates: Look for manufacturing date, best before/use by date as shown on the pack.',
+    },
+    helpTitle: 'If something looks wrong',
+    helpIntro: 'Re-check the pack and the text you read before concluding anything.',
+    helpLines: {
+      recheck: 'Re-check the pack and the text you confirmed.',
+      officialInfo: "Check the manufacturer's official information if available.",
+      helpline: 'FSSAI helpline: 1800-112-100 (24x7)',
+      foscos: 'Food Safety Connect:',
+      ncl: 'National Consumer Helpline: 1915',
+      fboSearch: 'FoSCoS FBO Search: for licence numbers',
+      disclaimer: 'FoodCheck does not report anything for you.',
+    },
+  },
+  about: {
+    title: 'About FoodCheck',
+    whatItDoesTitle: 'What it does',
+    whatItDoes:
+      'FoodCheck compares a packaged food’s printed ingredient list (read from a photo with in-browser OCR) with its Open Food Facts record and reports Consistent with available records, Potential discrepancy, or Insufficient evidence.',
+    whatItDoesNotTitle: 'What it does not do',
+    whatItDoesNot:
+      'This does not confirm the product is genuine or safe. A database record does not prove this pack is genuine.',
+    sourcesTitle: 'Sources',
+    sources: {
+      off: 'Open Food Facts (community data):',
+      fssai: 'FSSAI Labelling and Display Regulations 2020 and amendments',
+    },
+    limitsTitle: 'Limits',
+    limits:
+      'Results depend on OCR accuracy, photo quality, and whether the database record is up to date. Missing data is shown as "Not available".',
+    privacyTitle: 'Privacy notice',
+    privacy:
+      'Photos stay on the device. No images or OCR text are sent to servers. No personal information is collected. History stays on this device only.',
+    prototype: 'Prototype v1.0 built for a college Community Engagement Project.',
+  },
+  errors: {
+    boundaryTitle: 'Something went wrong',
+    boundaryBody: 'An unexpected error occurred. Please try again or go back to the home page.',
+    retry: 'Retry',
+    goHome: 'Go to home',
+    networkError: 'We could not reach the server. Please check your connection and try again.',
+    generic: 'Something went wrong. Please try again.',
+  },
+  offline: {
+    banner: 'You are offline. Some features may be limited.',
+  },
 } as const;
 
 export type UiStrings = typeof uiStrings;
