@@ -5,6 +5,7 @@ import { SIMULATED_TEST_LABEL } from '../data/simulated';
 import { compareIngredients } from '../lib/compare';
 import type { OcrConfidence } from '../lib/compare';
 import { resolveConfirmedConfidence } from '../lib/confidence';
+import { checkLicenceNumber } from '../lib/licence';
 import { fetchProduct } from '../lib/productClient';
 import type { ApiErrorBody, ProductResponse } from '../lib/api';
 import ClassificationBadge from '../components/ClassificationBadge';
@@ -52,6 +53,7 @@ export default function Result() {
 
   const [state, setState] = useState<PageState>({ status: 'loading' });
   const [reloadKey, setReloadKey] = useState(0);
+  const [licenceNumber, setLicenceNumber] = useState('');
 
   useEffect(() => {
     if (!hasObservedText) {
@@ -149,6 +151,7 @@ export default function Result() {
   const finding = compareIngredients(observedText, referenceText, confidence, {
     retrievedAt: data.retrievedAt,
   });
+  const licenceCheck = checkLicenceNumber(licenceNumber);
 
   return (
     <section className="space-y-4">
@@ -228,6 +231,45 @@ export default function Result() {
             )}
           </ResultRow>
         </dl>
+      </section>
+
+      <section aria-labelledby="licence-heading" className="space-y-2 rounded-2xl bg-white p-4 shadow-sm">
+        <h2 id="licence-heading" className="text-base font-semibold text-brand-dark">
+          {uiStrings.result.licence.label}
+        </h2>
+        <label htmlFor="fssai-licence" className="block text-sm font-medium text-brand-dark">
+          {uiStrings.result.licence.inputLabel}
+        </label>
+        <input
+          id="fssai-licence"
+          type="text"
+          inputMode="numeric"
+          autoComplete="off"
+          value={licenceNumber}
+          onChange={(event) => setLicenceNumber(event.target.value)}
+          placeholder={uiStrings.result.licence.placeholder}
+          aria-describedby="fssai-licence-help"
+          className="min-h-[44px] w-full rounded-lg border border-black/15 bg-white px-3 text-sm text-brand-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        />
+        {licenceCheck === 'FORMAT_OK' ? (
+          <p id="fssai-licence-help" className="text-sm text-brand-dark/90">
+            {uiStrings.result.licence.formatOk}{' '}
+            <a
+              href="https://foscos.fssai.gov.in/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-brand underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            >
+              {uiStrings.result.licence.foscosLink}
+            </a>
+          </p>
+        ) : null}
+        {licenceCheck === 'WRONG_LENGTH' || licenceCheck === 'NON_DIGITS' ? (
+          <p id="fssai-licence-help" role="alert" className="text-sm font-medium text-amber-800">
+            {uiStrings.result.licence.wrongFormat}
+          </p>
+        ) : null}
+        <p className="text-xs text-brand-dark/70">{uiStrings.result.licence.privacyNote}</p>
       </section>
 
       <section aria-labelledby="conclusion-heading" className="space-y-3 rounded-2xl bg-white p-4 shadow-sm">

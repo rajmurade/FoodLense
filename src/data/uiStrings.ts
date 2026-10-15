@@ -75,6 +75,16 @@ export const uiStrings = {
     nextRecheck: 'Re-check the text',
     nextHelp: 'Official help',
     nextScanAnother: 'Scan another product',
+    licence: {
+      label: 'FSSAI licence no.',
+      inputLabel: 'FSSAI licence number (14 digits)',
+      placeholder: '14 digits',
+      formatOk:
+        'Format looks right (14 digits). This does not verify the licence. Check it on FoSCoS.',
+      wrongFormat: 'A licence number has 14 digits.',
+      foscosLink: 'Check on FoSCoS',
+      privacyNote: 'This number is never stored, logged or sent anywhere.',
+    },
   },
   steps: {
     progressLabel: 'Progress',
