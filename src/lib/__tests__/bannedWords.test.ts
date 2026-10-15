@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { uiStrings } from '../../data/uiStrings';
+import { externalResourcesNotice, labelArticles, learnVideos, officialChannels } from '../../data/resources';
 import { ALLOWED_DISCLAIMER_SENTENCES, BANNED_WORDS } from '../../data/bannedWords';
 
 function collectStrings(value: unknown, out: string[] = []): string[] {
@@ -33,11 +34,22 @@ function stripAllowedSentences(text: string): string {
   );
 }
 
-const checkedStrings = collectStrings(uiStrings);
+const checkedStrings = [
+  ...collectStrings(uiStrings),
+  ...collectStrings({ labelArticles, learnVideos, officialChannels, externalResourcesNotice }),
+];
 
 describe('banned words in UI strings', () => {
   it('has UI strings to check', () => {
     expect(checkedStrings.length).toBeGreaterThan(0);
+  });
+
+  it('includes the external resources data in the scanned strings', () => {
+    expect(checkedStrings).toContain(externalResourcesNotice);
+    for (const card of [...labelArticles, ...learnVideos]) {
+      expect(checkedStrings).toContain(card.title);
+      expect(checkedStrings).toContain(card.source);
+    }
   });
 
   it('allowlists only the exact required disclaimer sentences', () => {

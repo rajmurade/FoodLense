@@ -14,9 +14,14 @@ implemented, what is incomplete, what is simulated, and the known limitations.
 
 ### Implemented
 
-Shell/routing (header, tab bar, footer disclaimer, skip link), and the Home page
-(`src/pages/Home.tsx`, `docs/UI_UX.md` §4.2: tagline, Scan / Type / Guide / Official-help
-actions, the three-step "How it works" list and the required note; no greeting).
+Shell/routing (header with logo + About, a fixed bottom tab bar at every width
+with Home / Scan / Guide / Help, footer disclaimer, skip link), and the Home page
+(`src/pages/Home.tsx`, `docs/UI_UX.md` §4.2: hero with a green gradient and an inline
+SVG illustration, tagline, Scan / Type-barcode actions, the "Need help?" card with
+FSSAI helpline `tel:1800112100`, National Consumer Helpline `tel:1915` and the Food
+Safety Connect link, "Learn to read a label" and "Watch and learn" card sections fed by
+`src/data/resources.ts`, the three-step "How it works" strip and the required note; no
+greeting).
 
 - Barcode: `src/lib/barcode.ts` (EAN-13/EAN-8/UPC-A validation, UPC-A padded to 13 digits for
   upstream lookups).
@@ -37,8 +42,11 @@ actions, the three-step "How it works" list and the required note; no greeting).
   as user-confirmed HIGH; an untouched low-confidence reading stays LOW).
 - Scan page: `src/lib/scan.ts` and `@zxing/browser` camera decode with a typed fallback; every
   decoded value is validated before any network call.
-- Guide + Help (`src/pages/Guide.tsx`, `/guide` and `/guide#help`): how to read a label, and the
-  official channels from `docs/specs.md` §6.5, stating that FoodCheck reports nothing.
+- Guide + Help (`src/pages/Guide.tsx` and `src/pages/Help.tsx`, `/guide`, `/guide#help` and
+  `/help`): how to read a label, and the official channels from `docs/specs.md` §6.5, stating
+  that FoodCheck reports nothing. External article/video cards live in `src/data/resources.ts`
+  (titles paraphrased, YouTube search links only, no embeds) and are scanned by the
+  banned-words test.
 - About (`src/pages/About.tsx`): what it does and does not do, sources, limits, privacy notice,
   and "Prototype v1.0 built for a college Community Engagement Project".
 - Error boundary (`src/components/ErrorBoundary.tsx`) and offline banner
@@ -103,7 +111,8 @@ npm run preview    # serve the production build
 ## Routes
 
 `/` Home, `/scan` Barcode, `/product/:barcode` Product, `/label/:barcode` Photo/OCR,
-`/result/:barcode` Result, `/guide` Guide, `/history` History (P1), `/about` About.
+`/result/:barcode` Result, `/guide` Guide, `/help` Help, `/history` History (P1, route only,
+not in the nav), `/about` About.
 
 ## Dependencies (and why each exists)
 

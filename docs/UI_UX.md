@@ -29,8 +29,13 @@ Contrast: text and buttons must meet WCAG AA. Check the green on white and white
 
 ## 3. Navigation
 
-- **Mobile:** sticky top header (logo, About link) + bottom tab bar with four tabs: **Home, Scan, Guide, History**.
-- **Desktop/tablet:** same screens, centred column up to about 720 px; tab bar becomes a top nav.
+- **Every screen width:** sticky top header (logo + About link only) + a fixed **bottom** tab bar with four tabs: **Home, Scan, Guide, Help**. The header no longer carries the primary text nav.
+- The bottom bar is shown at all widths. The layout adds bottom padding and respects safe-area insets so the footer and content are never covered by the bar.
+- Each tab is an outline icon plus a short text label, and is a 44 px tap target with an `aria-label`. The active tab is marked by icon + label + a shape (a filled pill and a top indicator bar), **not by colour alone**; it also sets `aria-current="page"`.
+- Product, Label and Result screens keep the **Scan** tab active.
+- `/history` stays as a route but is removed from the navigation (P1, local to device).
+- A dedicated `/help` screen shows the official channels. The `/guide#help` anchor keeps working and links to the same channels.
+- Desktop/tablet: same screens and same bottom bar, centred column up to about 720 px.
 - Step progress bar ("1 Barcode, 2 Product, 3 Label, 4 Review, 5 Result") shown only on the flow screens, with text and numbers.
 - Back button on every flow screen. The flow state (barcode, text) is preserved when going back.
 - No Profile tab, no login. About replaces it (reachable from header and footer).
@@ -44,8 +49,9 @@ Contrast: text and buttons must meet WCAG AA. Check the green on white and white
 | `/product/:barcode` | Product record | Scan |
 | `/label/:barcode` | Photo, OCR, review text | Scan |
 | `/result/:barcode` | Comparison result | Scan |
-| `/guide` | How to read a label + official help channels | Guide |
-| `/history` | Recent scans (P1; local to device) | History |
+| `/guide` | How to read a label (help anchor `#help` kept) | Guide |
+| `/help` | Official help channels | Help |
+| `/history` | Recent scans (P1; local to device) | none (not in the nav) |
 | `/about` | Sources, limits, privacy | none |
 
 ### 4.1 Persistent footer (every page)
@@ -53,20 +59,31 @@ Contrast: text and buttons must meet WCAG AA. Check the green on white and white
 
 ### 4.2 Home
 ```
-[shield] FoodCheck
-Check your food label. Stay informed.
+[hero: green gradient, shield logo, "FoodCheck", tagline, decorative inline SVG]
 
 [ Scan a barcode            > ]   primary, large
 [ Type a barcode            > ]
-[ How to read a label       > ]   goes to /guide
-[ Official help channels    > ]   goes to /guide#help
+
+[ Need help? ]                    amber/warm card, icon, large text
+  FSSAI helpline 1800-112-100 (24x7)   tel:1800112100
+  National Consumer Helpline 1915      tel:1915
+  Food Safety Connect                  https://foscos.fssai.gov.in/consumergrievance
+  "FoodCheck does not report anything for you."
+
+Learn to read a label             white cards: icon, title, source name, "Opens in a new tab"
+Watch and learn                   video cards: "Search on YouTube"
+                                  "External resources. Not run by FoodCheck."
 
 How it works:  1 Scan or enter   2 Photograph ingredients   3 See what matches
 
 Note: Guidance based on available data. Not a lab test. For confirmed
 results contact official food testing laboratories.
 ```
-No personal greeting. The concept's "Report Concern" quick action becomes "Official help channels" (FoodCheck does not submit reports itself).
+Kept from before: the logo, tagline, primary "Scan a barcode" button, "Type a barcode" and the required note. Added: a hero with a green gradient and an inline SVG illustration, the help card, a "Learn to read a label" section, a "Watch and learn" section and the three-step "How it works" strip.
+
+Card rules: white, 16 px radius, soft shadow, one outline icon, a title, the source name, and "Opens in a new tab" (opened with `target="_blank"` and `rel="noopener noreferrer"`). Video cards link to YouTube search results and are labelled "Search on YouTube". All resources are external links only: no third-party images, iframes or embeds (the CSP blocks them and linking out protects privacy). System fonts only.
+
+No personal greeting. The concept's "Report Concern" quick action becomes the help card (FoodCheck does not submit reports itself).
 
 ### 4.3 Scan
 ```

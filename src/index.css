@@ -4,6 +4,7 @@
   --color-brand: #1e7f3c;
   --color-brand-dark: #14301f;
   --color-page: #eef6ef;
+  --shadow-card: 0 1px 2px rgba(20, 48, 31, 0.06), 0 6px 16px rgba(20, 48, 31, 0.08);
 }
 
 html {
@@ -17,8 +18,21 @@ body {
   color: var(--color-brand-dark);
 }
 
+.hero-surface {
+  background-image: linear-gradient(135deg, #1e7f3c 0%, #17732f 55%, #105c26 100%);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }

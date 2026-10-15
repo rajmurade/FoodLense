@@ -32,7 +32,7 @@ export default function Layout() {
       <main
         id="main-content"
         ref={mainRef}
-        className="mx-auto w-full max-w-[720px] flex-1 px-4 pb-24 pt-4 md:pb-8"
+        className="mx-auto w-full max-w-[720px] flex-1 px-4 pb-8 pt-4"
       >
         <Outlet />
       </main>

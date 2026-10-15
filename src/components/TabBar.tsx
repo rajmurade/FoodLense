@@ -1,92 +1,72 @@
-import { NavLink } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import type { ComponentType } from 'react';
 import { uiStrings } from '../data/uiStrings';
+import { GuideIcon, HelpIcon, HomeIcon, ScanIcon } from './icons';
 
 type IconProps = { className?: string };
-
-function HomeIcon({ className }: IconProps) {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 10.5 12 3l9 7.5" />
-      <path d="M5 9.5V21h14V9.5" />
-      <path d="M10 21v-6h4v6" />
-    </svg>
-  );
-}
-
-function ScanIcon({ className }: IconProps) {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 8V5a1 1 0 0 1 1-1h3" />
-      <path d="M16 4h3a1 1 0 0 1 1 1v3" />
-      <path d="M20 16v3a1 1 0 0 1-1 1h-3" />
-      <path d="M8 20H5a1 1 0 0 1-1-1v-3" />
-      <path d="M4 12h16" />
-    </svg>
-  );
-}
-
-function GuideIcon({ className }: IconProps) {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2V5Z" />
-      <path d="M8 7h7" />
-      <path d="M8 11h7" />
-    </svg>
-  );
-}
-
-function HistoryIcon({ className }: IconProps) {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
-      <path d="M3 3v5h5" />
-      <path d="M12 7v5l3 2" />
-    </svg>
-  );
-}
 
 type Tab = {
   to: string;
   label: string;
-  end: boolean;
   Icon: ComponentType<IconProps>;
+  isActive: (pathname: string) => boolean;
 };
 
 const tabs: Tab[] = [
-  { to: '/', label: uiStrings.nav.home, end: true, Icon: HomeIcon },
-  { to: '/scan', label: uiStrings.nav.scan, end: false, Icon: ScanIcon },
-  { to: '/guide', label: uiStrings.nav.guide, end: false, Icon: GuideIcon },
-  { to: '/history', label: uiStrings.nav.history, end: false, Icon: HistoryIcon },
+  { to: '/', label: uiStrings.nav.home, Icon: HomeIcon, isActive: (path) => path === '/' },
+  {
+    to: '/scan',
+    label: uiStrings.nav.scan,
+    Icon: ScanIcon,
+    isActive: (path) =>
+      path.startsWith('/scan') ||
+      path.startsWith('/product') ||
+      path.startsWith('/label') ||
+      path.startsWith('/result'),
+  },
+  { to: '/guide', label: uiStrings.nav.guide, Icon: GuideIcon, isActive: (path) => path.startsWith('/guide') },
+  { to: '/help', label: uiStrings.nav.help, Icon: HelpIcon, isActive: (path) => path.startsWith('/help') },
 ];
 
 export default function TabBar() {
+  const { pathname } = useLocation();
+
   return (
     <nav
       aria-label={uiStrings.nav.tabsLabel}
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-black/10 bg-white/95 backdrop-blur md:hidden"
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-black/10 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
       <ul className="mx-auto flex w-full max-w-[720px]">
-        {tabs.map(({ to, label, end, Icon }) => (
-          <li key={to} className="flex-1">
-            <NavLink
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                `flex min-h-[44px] flex-col items-center justify-center gap-1 px-2 py-2 text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand ${
-                  isActive ? 'text-brand' : 'text-brand-dark/70'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <Icon className={isActive ? 'h-6 w-6 text-brand' : 'h-6 w-6'} />
-                  <span>{label}</span>
-                </>
-              )}
-            </NavLink>
-          </li>
-        ))}
+        {tabs.map(({ to, label, Icon, isActive }) => {
+          const active = isActive(pathname);
+          return (
+            <li key={to} className="flex-1">
+              <Link
+                to={to}
+                aria-label={label}
+                aria-current={active ? 'page' : undefined}
+                className={`relative flex min-h-[56px] flex-col items-center justify-center gap-1 px-1 pb-1.5 pt-2 text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand ${
+                  active ? 'font-semibold text-brand' : 'font-medium text-brand-dark/70'
+                }`}
+              >
+                <span
+                  aria-hidden="true"
+                  className={`absolute inset-x-3 top-0 h-0.5 rounded-full ${
+                    active ? 'bg-brand' : 'bg-transparent'
+                  }`}
+                />
+                <span
+                  className={`flex h-9 w-16 items-center justify-center rounded-full ${
+                    active ? 'bg-brand/15' : ''
+                  }`}
+                >
+                  <Icon className="h-6 w-6" />
+                </span>
+                <span>{label}</span>
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </nav>
   );
